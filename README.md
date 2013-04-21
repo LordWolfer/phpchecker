@@ -10,7 +10,7 @@ It actually turned out to be quite useful and as such I thought I'd share it.
 
 Chmod it to 700 (or something similar).
 
-Usage: backdoorcheck.sh <options>
+Usage: phpchecker.sh <options>
 
 Options are:
 

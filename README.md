@@ -3,7 +3,7 @@ phpchecker
 
 This is a simple shell script that checks for possibly malicious php files on a filesystem.
 
-I made this script as an attempt to fetch anomalies on a webserver which I administer as an attempt to locate various webshells and whatnot.
+I made this script to fetch anomalies on a webserver which I administer as an attempt to locate various webshells and whatnot.
 It actually turned out to be quite useful and as such I thought I'd share it.
 
 

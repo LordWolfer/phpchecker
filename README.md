@@ -7,6 +7,7 @@ I made this script as an attempt to fetch anomalies on a webserver which I admin
 It actually turned out to be quite useful and as such I thought I'd share it.
 
 
+
 Chmod it to 700 (or something similar).
 
 Usage: backdoorcheck.sh <options>

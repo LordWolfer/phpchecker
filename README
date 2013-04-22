@@ -17,6 +17,6 @@ Options are:
 -b			Enable checking for raw bytestreams to the browser.
 -f <folder>	Only check folder instead of the whole file system.
 -h			This cruft.
--l <list>	Enable additional checks from a list.
--o <file>	The output file
--s <file>	Enable statistics (will be generated in file).
+-l <list>		Enable additional checks from a list.
+-o <file>		The output file
+-s <file>		Enable statistics (will be generated in file).

@@ -20,3 +20,4 @@ Options are:
 -l <list>		Enable additional checks from a list.
 -o <file>		The output file
 -s <file>		Enable statistics (will be generated in file).
+-q			Quiet mode. Don't output anything to terminal. > Useful for putting the script in cron.

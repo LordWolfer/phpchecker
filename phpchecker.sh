@@ -1,5 +1,19 @@
 #!/bin/bash
 
+#            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+#                    Version 2, December 2004
+#
+# Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>
+#
+# Everyone is permitted to copy and distribute verbatim or modified
+# copies of this license document, and changing it is allowed as long
+# as the name is changed.
+#
+#            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+#   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+#
+#  0. You just DO WHAT THE FUCK YOU WANT TO.
+
 VERSION=3.0
 
 FILE=suspicious_list
@@ -10,6 +24,7 @@ DOSTAT=false
 CHKBASE=/
 ADDLIST=
 ADDCHK=false
+SILENT=false
 
 #colors
 BOLD=$(tput bold)
@@ -45,7 +60,9 @@ check() {
 	echo -e $BOLD
 	for i in $(find $CHKBASE -type f -name '*.php')
 	do
-		echo $i
+		if [[ "$SILENT" == "false" ] ; then
+			echo $i
+		fi
 		#php.ini overrides....
 		if [[ $(cat $i) == *'ini_set'* ]] ; then
 			echo -e $RED"$i seems to override our php.ini settings! " >> $FILE
@@ -119,7 +136,7 @@ statistics(){
 	fi
 }
 
-while getopts bhs:f:o:l: OPTION
+while getopts bhs:f:o:l:q OPTION
 do
 	case $OPTION in
 		h)
@@ -144,16 +161,21 @@ do
 			ADDLIST=$OPTARG
 			ADDCHK=true
 			;;
+		q)
+			SILENT=true
+			;;
 		?)
 			help
 			;;
 	esac
 done
-echo -n "Checking files on $CHKBASE"
-if [[ "$DOSTAT" == "true" ]] ; then
-	echo -n " with statistics in: $STATFILE"
+if [[ "$SILENT" == "false" ]] ; then
+	echo -n "Checking files on $CHKBASE"
+	if [[ "$DOSTAT" == "true" ]] ; then
+		echo -n " with statistics in: $STATFILE"
+	fi
+	echo "."
 fi
-echo "."
 check
 statistics
 

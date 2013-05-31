@@ -62,7 +62,9 @@ EOF
 check() {
 	IFS=$'\n'
 	echo "Starting tests @ $(date --rfc-3339=seconds)...." > $FILE
-	echo -e $BOLD
+	if [[ "$SILENT" == "false" ]] ; then
+		echo -e $BOLD
+	fi
 	for i in $(find $CHKBASE -type f -name '*.php')
 	do
 		if [[ "$SILENT" == "false" ]] ; then
@@ -130,9 +132,11 @@ check() {
 		fi
 	done
 	echo -en $RESET >> $FILE
-	echo "Finished successfully."
+	if [[ "$SILENT" == "false" ]] ; then
+		echo "Finished successfully."
+		echo -en $RESET
+	fi
 	unset IFS
-	echo -en $RESET
 }
 
 statistics(){

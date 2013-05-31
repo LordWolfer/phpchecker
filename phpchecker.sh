@@ -138,8 +138,9 @@ check() {
 		if [[ "$SILENT" == "false" ]] ; then
 			echo $i
 		fi
-	fcheck $i >> $FILE
+	fcheck $i >> $FILE &
 	done
+	wait
 	echo -en $RESET >> $FILE
 	if [[ "$SILENT" == "false" ]] ; then
 		echo "Finished successfully."

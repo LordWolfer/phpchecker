@@ -14,7 +14,7 @@
 #
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
-VERSION=3.0
+VERSION=3.1
 
 FILE=suspicious_list
 STATFILE=
@@ -25,6 +25,7 @@ CHKBASE=/
 ADDLIST=
 ADDCHK=false
 SILENT=false
+TERMWARN=false
 
 #colors
 BOLD=$(tput bold)
@@ -41,6 +42,8 @@ Current version: $VERSION
 
 Usage: $0 [<options>]
 
+When called withouth options the script will start checking the whole filesystem (which can take a while).
+
 Options are:
 
 -b		Enable checking for raw bytestreams to the browser.
@@ -49,6 +52,8 @@ Options are:
 -l <list>	Enable additional checks from a list.
 -o <file>	The output file
 -s <file>	Enable statistics (will be generated in file).
+-q		Quiet mode. Dont write filenames to terminal.
+-w		Enable warnings to terminal about the most suspicious files. (Requires quiet mode to be set.)
 
 EOF
 	exit 0	
@@ -56,11 +61,11 @@ EOF
 
 check() {
 	IFS=$'\n'
-	echo "Starting tests @ $(date +%Y%m%d:%H%M)...." > $FILE
+	echo "Starting tests @ $(date --rfc-3339=seconds)...." > $FILE
 	echo -e $BOLD
 	for i in $(find $CHKBASE -type f -name '*.php')
 	do
-		if [[ "$SILENT" == "false" ] ; then
+		if [[ "$SILENT" == "false" ]] ; then
 			echo $i
 		fi
 		#php.ini overrides....
@@ -132,11 +137,19 @@ check() {
 
 statistics(){
 	if [[ "$DOSTAT" == "true" ]] ; then
-		cat $FILE | grep -v ^""$ | cut -d" " -f1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" | uniq -c | sort -r -n -t" " -k 1 > $STATFILE
+		cat $FILE | grep -v ^""$ | grep -v "Starting tests @" | cut -d" " -f1 | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" | uniq -c | sort -r -n -t" " -k 1 > $STATFILE
 	fi
 }
 
-while getopts bhs:f:o:l:q OPTION
+terminalwarning(){
+	if [[ "$TERMWARN" == "true" ]] && [[ "$SILENT" == "true" ]] ; then
+		echo $BOLD$RED
+		cat $STATFILE | awk '$1 >= 4'
+		echo $RESET
+	fi
+}
+
+while getopts bhs:f:o:l:qw OPTION
 do
 	case $OPTION in
 		h)
@@ -164,6 +177,9 @@ do
 		q)
 			SILENT=true
 			;;
+		w)
+			TERMWARN=true
+			;;
 		?)
 			help
 			;;
@@ -178,4 +194,5 @@ if [[ "$SILENT" == "false" ]] ; then
 fi
 check
 statistics
+terminalwarning
 

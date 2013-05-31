@@ -59,6 +59,74 @@ EOF
 	exit 0	
 }
 
+fcheck(){
+	IFS=$'\n'
+	for l in $(cat $1)
+	do
+		#php.ini overrides....
+		if [[ "$l" == *"ini_set"* ]] ; then
+			echo -e $RED"$i seems to override our php.ini settings! "
+		fi
+		if [[ "$l" == *"error_reporting"* ]] || [[ "$l" == *"error_log"* ]] ; then
+			echo -e $RED"$i seems to tamper with the error reporting! "
+		fi		
+		if [[ "$l" == *"display_error"* ]] ; then
+			echo -e $RED"$i seems to set the displaying of errors! "
+		fi
+		#running code at runtime....
+		if [[ "$l" == *"eval"* ]] ; then
+			echo -e $RED"$i seems to be calling eval on something! "
+		fi
+		if [[ "$l" == *"exec"* ]] ; then
+			echo -e $RED"$i seems to be running a shell code! "
+		fi
+		#checking obfu...
+		if [[ "$l" == *"base64_decode"* ]] ; then
+			echo -e $YELLOW"$i seems to be decoding something! "
+		fi
+		if [[ "$l" == *"gzinflate"* ]] ; then
+			echo -e $YELLOW"$i seems to extract something gzipped! "
+		fi
+		#checking if it modifyes the file system
+		if [[ "$l" == *"fwrite"* ]] ; then
+			echo -e $YELLOW"$i tries to write into a file! "
+		fi
+		#checking XSS
+		if [[ "$l" == *[I,i][F,f][R,r][A,a][M,m][E,e]* ]] ; then
+			echo -e $YELLOW"$i contains an iframe! "
+		fi
+		if [[ "$l" == *"redsirenwebsolutions.com"* ]] || [[  "$l" == *"ha.ckers.org"* ]] ; then
+			echo -e $RED"$i mentions a bad domain! "
+		fi
+		if [[ "$l" == *"fromCharCode"* ]] ; then
+			echo -e $RED"$i contains obfuscated javascript! "
+		fi
+		if [[ "$l" == *"<"[I,i][M,m][G,g]" "[S,s][R,r][C,c]"="[\",\'][J,j][A,a][V,v][A,a][S,s][C,c][R,r][I,i][P,p][T,t]":"* ]] || [[  "$l" == *"<"[I,i][M,m][G,g]" "[S,s][R,r][C,c]"="[J,j][A,a][V,v][A,a][S,s][C,c][R,r][I,i][P,p][T,t]* ]] ; then
+			echo -e $RED"$i contains a javascript hidden as an image! "
+		fi
+		if [[ "$l" == *"document.cookie"* ]] ; then
+			echo -e $RED"$i plays with the user's cookie! "
+		fi
+		if [[ "$l" == *"&#"[0-9]* ]] || [[ "$l" == *"&#x"[0-9]* ]] ; then
+			echo -e $RED"$i contains someting obfuscated (utf-8 encoded)! "
+		fi
+		#checking if it sends raw data to the browser
+		if [[ "$BSCHECK" == "true" ]] && [[ "$l" == *"passthru"* ]] ; then
+			echo -e $YELLOW"$i seems to be opening a byte-stream to the browser! "
+		fi
+		#additional checks....
+		if [[ "$ADDCHK" == "true" ]] ; then
+			for j in $(cat $ADDLIST)
+			do
+				if [[ "$l" == *"$j"* ]] ; then
+					echo -e $GREEN"$i valideted true when checking $j from an user supplied list! "
+				fi
+			done
+		fi
+	done
+	unset IFS
+}
+
 check() {
 	IFS=$'\n'
 	echo "Starting tests @ $(date --rfc-3339=seconds)...." > $FILE
@@ -70,66 +138,7 @@ check() {
 		if [[ "$SILENT" == "false" ]] ; then
 			echo $i
 		fi
-		#php.ini overrides....
-		if [[ $(cat $i) == *'ini_set'* ]] ; then
-			echo -e $RED"$i seems to override our php.ini settings! " >> $FILE
-		fi
-		if [[ $(cat $i) == *"error_reporting"* ]] || [[ $(cat $i) == *"error_log"* ]] ; then
-			echo -e $RED"$i seems to tamper with the error reporting! " >> $FILE
-		fi		
-		if [[ $(cat $i) == *"display_error"* ]] ; then
-			echo -e $RED"$i seems to set the displaying of errors! " >> $FILE
-		fi
-		#running code at runtime....
-		if [[ $(cat $i) == *"eval"* ]] ; then
-			echo -e $RED"$i seems to be calling eval on something! " >> $FILE
-		fi
-		if [[ $(cat $i) == *"exec"* ]] ; then
-			echo -e $RED"$i seems to be running a shell code! " >> $FILE
-		fi
-		#checking obfu...
-		if [[  $(cat $i) == *"base64_decode"* ]] ; then
-			echo -e $YELLOW"$i seems to be decoding something! " >> $FILE
-		fi
-		if [[  $(cat $i) == *"gzinflate"* ]] ; then
-			echo -e $YELLOW"$i seems to extract something gzipped! " >> $FILE
-		fi
-		#checking if it modifyes the file system
-		if [[  $(cat $i) == *"fwrite"* ]] ; then
-			echo -e $YELLOW"$i tries to write into a file! " >> $FILE
-		fi
-		#checking XSS
-		if [[  $(cat $i) == *[I,i][F,f][R,r][A,a][M,m][E,e]* ]] ; then
-			echo -e $YELLOW"$i contains an iframe! " >> $FILE
-		fi
-		if [[  $(cat $i) == *"redsirenwebsolutions.com"* ]] || [[  $(cat $i) == *"ha.ckers.org"* ]] ; then
-			echo -e $RED"$i mentions a bad domain! " >> $FILE
-		fi
-		if [[  $(cat $i) == *"fromCharCode"* ]] ; then
-			echo -e $RED"$i contains obfuscated javascript! " >> $FILE
-		fi
-		if [[  $(cat $i) == *"<"[I,i][M,m][G,g]" "[S,s][R,r][C,c]"="[\",\'][J,j][A,a][V,v][A,a][S,s][C,c][R,r][I,i][P,p][T,t]":"* ]] || [[  $(cat $i) == *"<"[I,i][M,m][G,g]" "[S,s][R,r][C,c]"="[J,j][A,a][V,v][A,a][S,s][C,c][R,r][I,i][P,p][T,t]* ]] ; then
-			echo -e $RED"$i contains a javascript hidden as an image! " >> $FILE
-		fi
-		if [[  $(cat $i) == *"document.cookie"* ]] ; then
-			echo -e $RED"$i plays with the user's cookie! " >> $FILE
-		fi
-		if [[  $(cat $i) == *"&#"[0-9]* ]] || [[  $(cat $i) == *"&#x"[0-9]* ]] ; then
-			echo -e $RED"$i contains someting obfuscated (utf-8 encoded)! " >> $FILE
-		fi
-		#checking if it sends raw data to the browser
-		if [[ "$BSCHECK" == "true" ]] && [[ $(cat $i) == *'passthru'* ]] ; then
-			echo -e $YELLOW"$i seems to be opening a byte-stream to the browser! " >> $FILE
-		fi
-		#additional checks....
-		if [[ "$ADDCHK" == "true" ]] ; then
-			for j in $(cat $ADDLIST)
-			do
-				if [[ $(cat $i) == *"$j"* ]] ; then
-					echo -e $GREEN"$i valideted true when checking $j from an user supplied list! " >> $FILE
-				fi
-			done
-		fi
+	fcheck $i >> $FILE
 	done
 	echo -en $RESET >> $FILE
 	if [[ "$SILENT" == "false" ]] ; then
